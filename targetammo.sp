@@ -25,7 +25,7 @@
 #include <sdktools>
 #include <tf2_stocks>
 
-#define PLUGIN_VERSION "0.03"
+#define PLUGIN_VERSION "0.05"
 
 new Handle:h_HudMsg = INVALID_HANDLE;
 
@@ -150,41 +150,6 @@ stock TF2_GetCurrentWeapon(client) {
 	return -1;
 }
 
-stock TF2_GetWeaponClass(index, String:name[], maxlength) {
-	if (index > 0)
-		GetEntityNetClass(index, name, maxlength);
-}
-
-stock TF2_GetSlotAmmo(any:client, slot)
-{
-	if( client > 0 )
-	{
-		new offset = FindDataMapOffs(client, "m_iAmmo") + ((slot + 1) * 4);
-		return GetEntData(client, offset, 4);
-	}
-	return -1;
-}
-
-stock TF2_GetSlotClip(any:client, slot, clip = 1)
-{
-	if( client > 0 )
-	{
-		new weaponIndex = GetPlayerWeaponSlot(client, slot);
-		if( weaponIndex != -1 )
-		{
-			if (clip == 1)
-			{
-				return GetEntProp( weaponIndex, Prop_Send, "m_iClip1" );
-			}
-			else
-			{
-				return GetEntProp( weaponIndex, Prop_Send, "m_iClip2" );
-			}
-		}
-	}
-	return -1;
-}
-
 stock TF2_GetSlotWeapon(any:client, slot)
 {
 	if( client > 0 && slot >= 0)
@@ -207,3 +172,4 @@ stock TF2_GetSlotByWeapon(client)
 	}
 	return -1;
 }
+
