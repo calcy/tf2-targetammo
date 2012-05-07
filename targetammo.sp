@@ -25,9 +25,12 @@
 #include <sdktools>
 #include <tf2_stocks>
 
-#define PLUGIN_VERSION "0.05"
+#define PLUGIN_VERSION "0.50"
 
-new Handle:h_HudMsg = INVALID_HANDLE;
+#define REFRESH_RATE 0.25
+
+new Handle:h_HudTarget = INVALID_HANDLE;
+new Handle:h_HudMedicHeal = INVALID_HANDLE;
 
 new offset_ammo, offset_clip;
 
@@ -43,14 +46,15 @@ public Plugin:myinfo =
 public OnPluginStart() {
 	CreateConVar("ta_version", PLUGIN_VERSION, "[TF2] Team Ammo Viewer");
 
-	h_HudMsg = CreateHudSynchronizer();
+	h_HudTarget = CreateHudSynchronizer();
+	h_HudMedicHeal = CreateHudSynchronizer();
 
 	offset_ammo = FindSendPropInfo("CTFPlayer", "m_iAmmo");
 	offset_clip = FindSendPropInfo("CBaseCombatWeapon", "m_iClip1");
 }
 
 public OnMapStart() {
-	CreateTimer(0.5, Timer_TargetAmmoCheck, _, TIMER_REPEAT);
+	CreateTimer(REFRESH_RATE, Timer_TargetAmmoCheck, _, TIMER_REPEAT);
 }
 
 public Action:Timer_TargetAmmoCheck(Handle:timer) {
@@ -58,8 +62,8 @@ public Action:Timer_TargetAmmoCheck(Handle:timer) {
 		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i))
 			continue;
 
-		CheckMedicHeals(i);
-		CheckTargetAim(i);
+		new target = CheckMedicHeals(i);
+		CheckTargetAim(i, target);
 	}
 
 	return Plugin_Continue;
@@ -71,12 +75,14 @@ stock CheckMedicHeals(player) {
 	medicTarget = TF2_GetHealingTarget(player)
 	if (medicTarget > 0)
 		WriteAmmoOnHud(player, medicTarget, true);
+	
+	return medicTarget;
 }
 
-stock CheckTargetAim(player) {
+stock CheckTargetAim(player, medicTarget = -1) {
 	new target = GetClientAimTarget(player);
 
-	if (target != -1)
+	if (target != -1 && target != medicTarget)
 		WriteAmmoOnHud(player, target);
 }
 
@@ -91,20 +97,6 @@ stock WriteAmmoOnHud(player, target, bool:medic_healing = false) {
 	if (slot != 1 && slot != 2)
 		return;
 	
-	new red, green, blue;
-
-	new player_team = GetClientTeam(player);
-
-	if (player_team == 2) {
-		red = 255;
-		green = 0;
-		blue = 0;
-	} else {
-		red = 0;
-		green = 0;
-		blue = 255;
-	}
-
 	new String:ammotext[255];
 
 	new clip = GetEntProp(weapon, Prop_Send, "m_iClip1"); // current clip
@@ -120,9 +112,33 @@ stock WriteAmmoOnHud(player, target, bool:medic_healing = false) {
 
 	//new TFClassType:target_class = TF2_GetPlayerClass(target);
 
+	new red, green, blue;
+
+	new player_team = GetClientTeam(player);
+
+	if (player_team == 2) { // RED
+		red = 255;
+		green = 0;
+		blue = 0;
+	} else {
+		red = 0;
+		green = 50;
+		blue = 255;
+	}
+
+	if (medic_healing) {
+		SetHudTextParams(0.6, 0.7, REFRESH_RATE, red, green, blue, 0.8, 0, 0, 0, 0);
+		ShowSyncHudText(player, h_HudMedicHeal, ammotext);
+	}
+	else {
+		SetHudTextParams(0.6, 0.5, REFRESH_RATE, red, green, blue, 0.8, 0, 0, 0, 0);
+		ShowSyncHudText(player, h_HudTarget, ammotext);
+	}
+	
+
 	if (medic_healing)
 		Format(ammotext, sizeof(ammotext), "%s | HEALING", ammotext);
-
+	
 	PrintToChat(player, "[SM] Ammo: %s", ammotext);
 }
 
