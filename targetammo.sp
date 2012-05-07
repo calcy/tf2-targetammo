@@ -57,9 +57,11 @@ public Action:Timer_TargetAmmoCheck(Handle:timer) {
 	for (new i = 1; i <= MaxClients; i++) {
 		if (!IsClientInGame(i) || IsFakeClient(i) || !IsPlayerAlive(i))
 			continue;
+
 		CheckMedicHeals(i);
 		CheckTargetAim(i);
 	}
+
 	return Plugin_Continue;
 }
 
@@ -72,7 +74,10 @@ stock CheckMedicHeals(player) {
 }
 
 stock CheckTargetAim(player) {
-	
+	new target = GetClientAimTarget(player);
+
+	if (target != -1)
+		WriteAmmoOnHud(player, target);
 }
 
 stock WriteAmmoOnHud(player, target, bool:medic_healing = false) {
@@ -114,6 +119,9 @@ stock WriteAmmoOnHud(player, target, bool:medic_healing = false) {
 	Format(ammotext, sizeof(ammotext), "%s%i", ammotext, reserve);
 
 	//new TFClassType:target_class = TF2_GetPlayerClass(target);
+
+	if (medic_healing)
+		Format(ammotext, sizeof(ammotext), "%s | HEALING", ammotext);
 
 	PrintToChat(player, "[SM] Ammo: %s", ammotext);
 }
