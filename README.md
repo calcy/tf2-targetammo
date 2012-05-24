@@ -11,5 +11,5 @@ TODO
 * Fix default positions and colors of ammo text
 * Make text stop flickering (maybe use onGameFrame() instead of a timer every X.XX seconds?)
 * Test output of non-damage weapons
-* Add Soldier rage meters
+* Add Soldier rage meters and Pyro "mmmph" meter
 * Have client-side options to turn off/on plugin and for position on screen
